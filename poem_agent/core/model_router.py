@@ -1,4 +1,4 @@
-"""Model candidate scoring uses task fit, availability, context, cost, and latency."""
+"""Model candidates scored against capabilities, context, cost, quality, and latency."""
 from dataclasses import dataclass
 
 
@@ -19,19 +19,26 @@ class ModelRouter:
         self.candidates = list(candidates)
         self.failures = {}
 
-    def choose(self, task, language="en", complexity=.4, context_tokens=0):
+    def choose(self, task, language="en", complexity=.4, context_tokens=0, exclude=None):
+        exclude = set(exclude or ())
         required = {"general"}
         if task in {"reasoning", "planning", "coding"} or complexity >= .7:
             required.add("reasoning")
         if language == "my":
             required.add("burmese")
-        eligible = [m for m in self.candidates if m.available and m.context_window >= context_tokens
-                    and self.failures.get((m.provider, m.model), 0) < 3]
+        eligible = [model for model in self.candidates if model.available
+                    and model.context_window >= context_tokens
+                    and (model.provider, model.model) not in exclude
+                    and self.failures.get((model.provider, model.model), 0) < 3]
         if not eligible:
             return None
-        def score(m):
-            match = len(required & m.capabilities) / len(required)
-            return match * 3 + m.quality - m.cost * (1 - complexity) - m.latency * .1
+        def score(model):
+            coverage = len(required & model.capabilities) / len(required)
+            quality = model.quality * 1.25
+            context_fit = min(1.0, model.context_window / max(context_tokens, 1)) * .2
+            cost_penalty = model.cost * (1 - complexity)
+            latency_penalty = model.latency * .1
+            return coverage * 3 + quality + context_fit - cost_penalty - latency_penalty
         return max(eligible, key=score)
 
     def record_failure(self, candidate):

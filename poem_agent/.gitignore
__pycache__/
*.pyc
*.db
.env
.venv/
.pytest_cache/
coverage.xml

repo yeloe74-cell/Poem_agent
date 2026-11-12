@@ -1,0 +1,12 @@
+# poem_agent/.env.example
+TELEGRAM_BOT_TOKEN=replace_me
+OWNER_TELEGRAM_ID=123456789
+DATABASE_PATH=poem_agent.db
+MODEL_PROVIDER=openai
+OPENAI_API_KEY=replace_me
+OPENAI_MODEL=gpt-4o-mini
+ANTHROPIC_API_KEY=replace_me
+GOOGLE_API_KEY=replace_me
+UNSPLASH_ACCESS_KEY=replace_me
+PEXELS_API_KEY=replace_me
+WIKIMEDIA_USER_AGENT=PoemAgent/1.0

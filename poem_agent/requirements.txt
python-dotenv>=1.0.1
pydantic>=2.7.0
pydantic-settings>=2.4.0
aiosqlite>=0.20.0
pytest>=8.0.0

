@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+from config.settings import Settings
+from core.agent import Agent
+from core.task_manager import TaskManager
+from security.security_manager import SecurityManager
+from storage.database import Database
+
+
+@dataclass
+class AppRuntime:
+    settings: Settings
+    database: Database
+    security: SecurityManager
+    task_manager: TaskManager
+    agent: Agent
+
+
+async def bootstrap() -> AppRuntime:
+    settings = Settings()
+    db = Database(settings.database_path)
+    await db.connect()
+    security = SecurityManager(owner_id=settings.owner_id)
+    task_manager = TaskManager(db=db, security=security)
+    agent = Agent(settings=settings, database=db, security=security, task_manager=task_manager)
+    return AppRuntime(
+        settings=settings,
+        database=db,
+        security=security,
+        task_manager=task_manager,
+        agent=agent,
+    )
+
+
+async def run_demo() -> dict[str, Any]:
+    runtime = await bootstrap()
+    result = await runtime.agent.handle_request(
+        user_id=runtime.settings.owner_id,
+        text="Please identify the next poem selection for a Burmese cultural weekly channel.",
+        context={"channel": "poem_daily", "language": "my"},
+    )
+    return {
+        "task_id": result["task_id"],
+        "status": result["status"],
+        "summary": result["summary"],
+    }
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Poem Agent")
+    parser.add_argument("--demo", action="store_true", help="run a sample workflow")
+    parser.add_argument("--reset-db", action="store_true", help="reset database")
+    return parser
+
+
+async def main() -> None:
+    parser = _build_parser()
+    args = parser.parse_args()
+    runtime = await bootstrap()
+    if args.reset_db:
+        runtime.database.reset()
+        print("Database reset.")
+        return
+    if args.demo:
+        demo_result = await run_demo()
+        print(json.dumps(demo_result, ensure_ascii=False, indent=2))
+        return
+    print("Poem Agent ready.")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

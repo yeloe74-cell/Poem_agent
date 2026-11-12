@@ -1,0 +1,43 @@
+# poem_agent/README.md
+# Intelligent AI Poem Channel Management Agent
+
+This project implements a secure, modular poetry management system with an AI-powered task orchestration layer, memory, poetry analysis, image matching, Telegram integration and approval gates.
+
+## Features
+
+- General-purpose AI agent with planning and security checks
+- Multi-model brain and model router
+- Hybrid memory: SQL + vector + knowledge + episodic memory
+- Poetry collection, classification, quality analysis and duplicate detection
+- Image discovery and validation with licensing checks
+- Telegram channel management and scheduling
+- Owner approval before destructive actions
+- Tests and line-check enforcement
+
+## Structure
+
+- `config/` configuration and prompts
+- `core/` agent, AI brain, planning and task management
+- `memory/` hybrid storage and vector retrieval
+- `poetry/` poem engine and ranking logic
+- `media/` image discovery and validation
+- `channel/` publish and approval workflows
+- `telegram/` bot and spider indicator
+- `tools/` tool registry and skill manager
+- `storage/` SQLite repository and models
+- `security/` permission and policy enforcement
+- `tests/` automated checks
+
+## Quick start
+
+```bash
+cd poem_agent
+python -m pip install -r requirements.txt
+cp .env.example .env
+python main.py --demo
+```
+
+## Notes
+
+The system is intentionally provider-agnostic and keeps credentials in environment variables only.
+
